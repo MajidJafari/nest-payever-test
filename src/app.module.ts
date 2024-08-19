@@ -5,6 +5,11 @@ import { UserMongoRepository } from './infrastructure/persistence/user.mongo.rep
 import { UserController } from './interfaces/rest/user.controller';
 import { UserCreationService } from './application/services/user-creation.service';
 import { UserSchema } from './infrastructure/schemas/user.schema';
+import { EmailService } from './application/services/email.service';
+import { RabbitMQService } from './application/services/rabbitmq.service';
+import { SenderFactory } from './application/services/sender.factory';
+import { FakeEmailService } from './application/services/fake/fake-email.service';
+import { FakeRabbitMQPService } from './application/services/fake/fake-rabbitmq.service';
 
 @Module({
   imports: [
@@ -17,6 +22,11 @@ import { UserSchema } from './infrastructure/schemas/user.schema';
   controllers: [UserController],
   providers: [
     UserCreationService,
+    EmailService,
+    RabbitMQService,
+    FakeEmailService,
+    FakeRabbitMQPService,
+    SenderFactory,
     { provide: 'UserRepository', useClass: UserMongoRepository },
   ],
 })
