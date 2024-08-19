@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as amqp from 'amqplib';
 import { ISender } from '../../domain/interfaces/sender.interface';
-import { EnvironmentTypes } from 'src/domain/enums/environment-types';
+import { EnvironmentTypes } from '../../domain/enums/environment-types';
 
 @Injectable()
 export class RabbitMQService implements ISender {

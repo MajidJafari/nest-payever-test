@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ISender } from 'src/domain/interfaces/sender.interface';
+import { ISender } from '../../../domain/interfaces/sender.interface';
 
 @Injectable()
 export class FakeRabbitMQPService implements ISender {

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserMongoRepository } from './infrastructure/persistence/user.mongo.repository';
 import { UserController } from './interfaces/rest/user.controller';
@@ -10,6 +10,7 @@ import { RabbitMQService } from './application/services/rabbitmq.service';
 import { SenderFactory } from './application/services/sender.factory';
 import { FakeEmailService } from './application/services/fake/fake-email.service';
 import { FakeRabbitMQPService } from './application/services/fake/fake-rabbitmq.service';
+import { EnvironmentTypes } from './domain/enums/environment-types';
 
 @Module({
   imports: [
@@ -22,10 +23,30 @@ import { FakeRabbitMQPService } from './application/services/fake/fake-rabbitmq.
   controllers: [UserController],
   providers: [
     UserCreationService,
-    EmailService,
-    RabbitMQService,
-    FakeEmailService,
-    FakeRabbitMQPService,
+    {
+      provide: 'EmailService',
+      useFactory: (configService: ConfigService) => {
+        const isTestEnv =
+          configService.get<EnvironmentTypes>('NODE_ENV') ===
+          EnvironmentTypes.Dev;
+        return isTestEnv
+          ? new FakeEmailService()
+          : new EmailService(configService);
+      },
+      inject: [ConfigService],
+    },
+    {
+      provide: 'RabbitMQService',
+      useFactory: (configService: ConfigService) => {
+        const isTestEnv =
+          configService.get<EnvironmentTypes>('NODE_ENV') ===
+          EnvironmentTypes.Dev;
+        return isTestEnv
+          ? new FakeRabbitMQPService()
+          : new RabbitMQService(configService);
+      },
+      inject: [ConfigService],
+    },
     SenderFactory,
     { provide: 'UserRepository', useClass: UserMongoRepository },
   ],

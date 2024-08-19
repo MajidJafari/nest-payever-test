@@ -4,8 +4,6 @@ import { randomBytes, pbkdf2Sync } from 'crypto';
 import { IUser } from '../../domain/interfaces/user.interface';
 import { SenderTypes } from '../../domain/enums/sender-types';
 import { SenderFactory } from './sender.factory';
-import { ConfigService } from '@nestjs/config';
-import { EnvironmentTypes } from '../../domain/enums/environment-types';
 
 @Injectable()
 export class UserCreationService {
@@ -13,7 +11,6 @@ export class UserCreationService {
     @(Inject('UserRepository') as any)
     private readonly userRepository: IUserRepository,
     private readonly senderFactory: SenderFactory,
-    private readonly configService: ConfigService,
   ) {}
 
   private hashPassword(password: string): { salt: string; hash: string } {
@@ -40,15 +37,10 @@ export class UserCreationService {
       },
     });
 
-    const env = this.configService.get<EnvironmentTypes>('NODE_ENV');
-
-    const emailSender = this.senderFactory.getSender(env, SenderTypes.Email);
+    const emailSender = this.senderFactory.getSender(SenderTypes.Email);
     await emailSender.send('Welcome to the platform!', email);
 
-    const rabbitMQSender = this.senderFactory.getSender(
-      env,
-      SenderTypes.RabbitMQ,
-    );
+    const rabbitMQSender = this.senderFactory.getSender(SenderTypes.RabbitMQ);
     await rabbitMQSender.send('User created successfully', email);
 
     return savedUser;
