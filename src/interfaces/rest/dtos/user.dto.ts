@@ -5,11 +5,13 @@ import { IUser } from '../../../domain/interfaces/user.interface';
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value.trim())
+  @Transform(({ value }) => typeof value === 'string' && value.trim())
   name!: string;
 
   @IsEmail()
-  @Transform(({ value }) => value.toLowerCase().trim())
+  @Transform(
+    ({ value }) => typeof value === 'string' && value.toLowerCase().trim(),
+  )
   email!: string;
 
   @IsString()
