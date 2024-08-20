@@ -252,13 +252,42 @@ describe('UserController (e2e)', () => {
         await request(app.getHttpServer())
           .get(`/users/${userId}/avatar`)
           .expect(200)
-          .expect(({ error, body }: any) => {
-            console.log(error);
+          .expect(({ body }: any) => {
             expect(body.data).toHaveProperty('base64Avatar');
           });
         expect(storeAvatarSpy).toHaveBeenCalledTimes(1);
         expect(verifyHashSpy).toHaveBeenCalledWith(filePath, avatar.hash);
       });
+    });
+  });
+
+  describe('deleteUserAvatar', () => {
+    const userId = '1';
+    let filePath: string;
+
+    beforeEach(async () => {
+      filePath = avatarService.getFilePath(userId);
+      await request(app.getHttpServer())
+        .get(`/users/${userId}/avatar`)
+        .expect(200);
+    });
+    it('should delete the user avatar file and its entry in DB', async () => {
+      await request(app.getHttpServer())
+        .delete(`/users/${userId}/avatar`)
+        .expect(200);
+
+      const avatar = await avatarRepo.findByUserId(userId);
+      expect(avatar).toBeNull();
+      expect(fs.existsSync(filePath)).toBe(false);
+    });
+    it('should not throw error if avatar does not exist', async () => {
+      await request(app.getHttpServer())
+        .delete(`/users/${userId}/avatar`)
+        .expect(200);
+
+      await request(app.getHttpServer())
+        .delete(`/users/${userId}/avatar`)
+        .expect(200);
     });
   });
 

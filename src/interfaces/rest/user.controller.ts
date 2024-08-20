@@ -7,6 +7,7 @@ import {
   Param,
   NotFoundException,
   BadRequestException,
+  Delete,
 } from '@nestjs/common';
 import { UserCreationService } from '../../application/services/user-creation.service';
 import { CreateUserDto, UserResponseDto } from './dtos/user.dto';
@@ -71,5 +72,11 @@ export class UserController {
       throw new BadRequestException('It seems that your file is corrupted.');
     }
     return { base64Avatar };
+  }
+
+  @Delete(':id/avatar')
+  async deleteUserAvatar(@Param('id') id: string) {
+    await this.avatarService.deleteAvatar(id);
+    return null;
   }
 }
