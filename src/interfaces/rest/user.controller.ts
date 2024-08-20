@@ -5,13 +5,21 @@ import {
   ConflictException,
   Get,
   Param,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { UserCreationService } from '../../application/services/user-creation.service';
 import { CreateUserDto, UserResponseDto } from './dtos/user.dto';
+import { UserService } from '../../application/services/user.service';
+import { AvatarService } from '../../application/services/avatar.service';
 
 @Controller('users')
 export class UserController {
-  constructor(private readonly userCreationService: UserCreationService) {}
+  constructor(
+    private readonly userCreationService: UserCreationService,
+    private readonly userService: UserService,
+    private readonly avatarService: AvatarService,
+  ) {}
 
   @Post('/')
   async createUser(
@@ -41,8 +49,27 @@ export class UserController {
 
   @Get('/:id')
   async getUser(@Param('id') id: string) {
-    const userApi = await fetch(`https://reqres.in/api/users/${id}`);
-    const json = await userApi.json();
-    return json.data || null;
+    const user = await this.userService.getUser(id);
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+    return user;
+  }
+
+  @Get('/:id/avatar')
+  async getUserAvatar(@Param('id') id: string) {
+    const user = await this.getUser(id);
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    const { isVerified, base64Avatar } = await this.avatarService.getAvatar(
+      id,
+      user.avatar,
+    );
+    if (!isVerified) {
+      throw new BadRequestException('It seems that your file is corrupted.');
+    }
+    return { base64Avatar };
   }
 }

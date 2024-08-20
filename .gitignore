@@ -35,6 +35,9 @@ yarn-error.log
 /packages/**/LICENSE
 *.tsbuildinfo
 
+# static
+storage/
+
 # example
 /quick-start
 /example_dist

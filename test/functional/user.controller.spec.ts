@@ -12,24 +12,37 @@ import { SenderFactory } from '../../src/application/services/sender.factory';
 import { FakeEmailService } from '../../src/application/services/fake/fake-email.service';
 import { FakeRabbitMQPService } from '../../src/application/services/fake/fake-rabbitmq.service';
 import { UserSchema } from '../../src/infrastructure/schemas/user.schema';
+import { AvatarService } from '../../src/application/services/avatar.service';
+import { AvatarSchema } from '../../src/infrastructure/schemas/avatar.schema';
+import { AvatarMongoRepository } from '../../src/infrastructure/persistence/avatar.mongo.repository';
+import { UserService } from '../../src/application/services/user.service';
+import * as fs from 'fs';
 
 describe('UserController (e2e)', () => {
   let app: INestApplication;
   let userRepo: UserMongoRepository;
+  let avatarService: AvatarService;
+  let avatarRepo: AvatarMongoRepository;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         MongooseModule.forRoot('mongodb://localhost:27017/payerver-test-db'),
-        MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
+        MongooseModule.forFeature([
+          { name: 'User', schema: UserSchema },
+          { name: 'Avatar', schema: AvatarSchema },
+        ]),
       ],
       controllers: [UserController],
       providers: [
         UserCreationService,
+        UserService,
+        AvatarService,
         { provide: 'EmailService', useClass: FakeEmailService },
         { provide: 'RabbitMQService', useClass: FakeRabbitMQPService },
         SenderFactory,
         { provide: 'UserRepository', useClass: UserMongoRepository },
+        { provide: 'AvatarRepository', useClass: AvatarMongoRepository },
       ],
     }).compile();
 
@@ -46,11 +59,13 @@ describe('UserController (e2e)', () => {
       .useGlobalFilters(new CustomExceptionFilter());
     await app.init();
 
+    avatarService = moduleFixture.get<AvatarService>(AvatarService);
     userRepo = moduleFixture.get<UserMongoRepository>('UserRepository');
+    avatarRepo = moduleFixture.get<AvatarMongoRepository>('AvatarRepository');
   });
 
   describe('createUser /api/users (POST) ', () => {
-    beforeEach(async () => {
+    afterEach(async () => {
       await userRepo.removeAll();
     });
     it('should create user and return 201 status', async () => {
@@ -170,17 +185,85 @@ describe('UserController (e2e)', () => {
           expect(body.data).toHaveProperty('avatar');
         });
     });
-    it('should return null if not data can be retrieved from https://reqres.in', async () => {
+    it('should response with 404 if data can not be retrieved from https://reqres.in', async () => {
+      await request(app.getHttpServer()).get('/users/13').expect(404);
+    });
+  });
+
+  describe('getUserAvatar', () => {
+    const userId = '1';
+    let filePath: string;
+
+    beforeEach(() => {
+      filePath = avatarService.getFilePath(userId);
+    });
+
+    afterAll(async () => {
+      await fs.unlinkSync(filePath);
+    });
+
+    it('should create an entry in DB with userId and hash and store the file', async () => {
       await request(app.getHttpServer())
-        .get('/users/13')
+        .get(`/users/${userId}/avatar`)
         .expect(200)
         .expect(({ body }: any) => {
-          expect(body.data).toBeNull();
+          expect(body.data).toHaveProperty('base64Avatar');
         });
+      expect(fs.existsSync(filePath)).toBe(true);
+
+      const avatar = await avatarRepo.findByUserId(userId);
+      expect(avatar).toHaveProperty('hash');
+    });
+
+    describe('Avatar Entry Exist in DB', () => {
+      let verifyHashSpy: jest.SpyInstance;
+      let storeAvatarSpy: jest.SpyInstance;
+
+      beforeEach(async () => {
+        filePath = avatarService.getFilePath(userId);
+
+        await request(app.getHttpServer())
+          .get(`/users/${userId}/avatar`)
+          .expect(200);
+
+        verifyHashSpy = jest.spyOn(avatarService, 'verifyHash');
+        storeAvatarSpy = jest.spyOn(avatarService, 'storeAvatar');
+      });
+
+      it('should read file from storage and if hash is verified returns it in base64 format if avatar for user already exist', async () => {
+        const avatar = await avatarRepo.findByUserId(userId);
+        expect(avatar).toHaveProperty('hash');
+
+        await request(app.getHttpServer())
+          .get(`/users/${userId}/avatar`)
+          .expect(200)
+          .expect(({ body }: any) => {
+            expect(body.data).toHaveProperty('base64Avatar');
+          });
+        expect(storeAvatarSpy).not.toHaveBeenCalled();
+        expect(verifyHashSpy).toHaveBeenCalledWith(filePath, avatar.hash);
+      });
+
+      it('should store file into storage and if hash is verified returns it in base64 format if avatar for user already exist but for some reason file has been deleted', async () => {
+        const avatar = await avatarRepo.findByUserId(userId);
+        expect(avatar).toHaveProperty('hash');
+        fs.unlinkSync(filePath);
+
+        await request(app.getHttpServer())
+          .get(`/users/${userId}/avatar`)
+          .expect(200)
+          .expect(({ error, body }: any) => {
+            console.log(error);
+            expect(body.data).toHaveProperty('base64Avatar');
+          });
+        expect(storeAvatarSpy).toHaveBeenCalledTimes(1);
+        expect(verifyHashSpy).toHaveBeenCalledWith(filePath, avatar.hash);
+      });
     });
   });
 
   afterAll(async () => {
     await app.close();
+    jest.resetAllMocks();
   });
 });

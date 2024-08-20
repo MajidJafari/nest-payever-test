@@ -11,6 +11,10 @@ import { SenderFactory } from './application/services/sender.factory';
 import { FakeEmailService } from './application/services/fake/fake-email.service';
 import { FakeRabbitMQPService } from './application/services/fake/fake-rabbitmq.service';
 import { EnvironmentTypes } from './domain/enums/environment-types';
+import { AvatarMongoRepository } from './infrastructure/persistence/avatar.mongo.repository';
+import { AvatarSchema } from './infrastructure/schemas/avatar.schema';
+import { AvatarService } from './application/services/avatar.service';
+import { UserService } from './application/services/user.service';
 
 @Module({
   imports: [
@@ -18,11 +22,16 @@ import { EnvironmentTypes } from './domain/enums/environment-types';
     MongooseModule.forRoot(process.env.MONGO_URI as string, {
       autoIndex: true,
     }),
-    MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: 'User', schema: UserSchema },
+      { name: 'Avatar', schema: AvatarSchema },
+    ]),
   ],
   controllers: [UserController],
   providers: [
     UserCreationService,
+    UserService,
+    AvatarService,
     {
       provide: 'EmailService',
       useFactory: (configService: ConfigService) => {
@@ -49,6 +58,7 @@ import { EnvironmentTypes } from './domain/enums/environment-types';
     },
     SenderFactory,
     { provide: 'UserRepository', useClass: UserMongoRepository },
+    { provide: 'AvatarRepository', useClass: AvatarMongoRepository },
   ],
 })
 export class AppModule {}
