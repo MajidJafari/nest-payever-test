@@ -1,4 +1,11 @@
-import { Controller, Post, Body, ConflictException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  ConflictException,
+  Get,
+  Param,
+} from '@nestjs/common';
 import { UserCreationService } from '../../application/services/user-creation.service';
 import { CreateUserDto, UserResponseDto } from './dtos/user.dto';
 
@@ -30,5 +37,12 @@ export class UserController {
       }
       throw e;
     }
+  }
+
+  @Get('/:id')
+  async getUser(@Param('id') id: string) {
+    const userApi = await fetch(`https://reqres.in/api/users/${id}`);
+    const json = await userApi.json();
+    return json.data || null;
   }
 }

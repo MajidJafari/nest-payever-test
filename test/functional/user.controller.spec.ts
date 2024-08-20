@@ -159,6 +159,27 @@ describe('UserController (e2e)', () => {
     });
   });
 
+  describe('getUser', () => {
+    it('should fetch user from https://reqres.in', async () => {
+      await request(app.getHttpServer())
+        .get('/users/1')
+        .expect(200)
+        .expect(({ body }: any) => {
+          expect(body.data.id).toEqual(1);
+          expect(body.data.email).toEqual('george.bluth@reqres.in');
+          expect(body.data).toHaveProperty('avatar');
+        });
+    });
+    it('should return null if not data can be retrieved from https://reqres.in', async () => {
+      await request(app.getHttpServer())
+        .get('/users/13')
+        .expect(200)
+        .expect(({ body }: any) => {
+          expect(body.data).toBeNull();
+        });
+    });
+  });
+
   afterAll(async () => {
     await app.close();
   });
