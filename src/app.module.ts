@@ -15,6 +15,7 @@ import { AvatarMongoRepository } from './infrastructure/persistence/avatar.mongo
 import { AvatarSchema } from './infrastructure/schemas/avatar.schema';
 import { AvatarService } from './application/services/avatar.service';
 import { UserService } from './application/services/user.service';
+import { RateLimiterModule } from 'nestjs-rate-limiter';
 
 @Module({
   imports: [
@@ -26,6 +27,10 @@ import { UserService } from './application/services/user.service';
       { name: 'User', schema: UserSchema },
       { name: 'Avatar', schema: AvatarSchema },
     ]),
+    RateLimiterModule.register({
+      points: 10, // 10 requests
+      duration: 60, // per minute
+    }),
   ],
   controllers: [UserController],
   providers: [

@@ -19,3 +19,11 @@ On following requests should return the previously saved file in base64-encoded.
 Removes the file from the FileSystem storage.
 
 Removes the stored entry from db.
+
+Further Improvements:
+- Use bcrypt for hash operation in high load production for processing the requests faster
+- Use i18n and Crowdin platforms to separate the text contents from feature implementation
+- Containerization of the external services of MongoDB and RabbitMQ
+- Use Redis for storing the rate-limit request information
+- Add some build tools like GitHub actions and add lint, test, qualify, and build as stages for it
+- Use Streaming for downloading and storing avatars

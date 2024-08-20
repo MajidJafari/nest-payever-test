@@ -2388,6 +2388,11 @@ expect@^29.0.0, expect@^29.7.0:
     jest-message-util "^29.7.0"
     jest-util "^29.7.0"
 
+express-rate-limit@^7.4.0:
+  version "7.4.0"
+  resolved "https://registry.yarnpkg.com/express-rate-limit/-/express-rate-limit-7.4.0.tgz#5db412b8de83fa07ddb40f610c585ac8c1dab988"
+  integrity sha512-v1204w3cXu5gCDmAvgvzI6qjzZzoMWKnyVDk3ACgfswTQLYiGen+r8w0VnXnGMmzEN/g8fwIQ4JrFFd4ZP6ssg==
+
 express@4.19.2:
   version "4.19.2"
   resolved "https://registry.yarnpkg.com/express/-/express-4.19.2.tgz#e25437827a3aa7f2a827bc8171bbbb664a356465"
@@ -2796,6 +2801,11 @@ hasown@^2.0.0, hasown@^2.0.2:
   integrity sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==
   dependencies:
     function-bind "^1.1.2"
+
+helmet@^7.1.0:
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/helmet/-/helmet-7.1.0.tgz#287279e00f8a3763d5dccbaf1e5ee39b8c3784ca"
+  integrity sha512-g+HZqgfbpXdCkme/Cd/mZkV0aV3BZZZSugecH03kl38m/Kmdx8jKjBikpDj2cr+Iynv4KpYEviojNdTJActJAg==
 
 hexoid@^1.0.0:
   version "1.0.0"
@@ -3845,6 +3855,13 @@ neo-async@^2.6.2:
   resolved "https://registry.yarnpkg.com/neo-async/-/neo-async-2.6.2.tgz#b4aafb93e3aeb2d8174ca53cf163ab7d7308305f"
   integrity sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==
 
+nestjs-rate-limiter@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/nestjs-rate-limiter/-/nestjs-rate-limiter-3.1.0.tgz#d09e4c3bebeedaf5efc5e1028e1b0ff9f0db9319"
+  integrity sha512-Qwr6daFvNppy038rs0iCQzX/uC3/czCC/2jATcETLIvyFmcBgySOMg7HGEquPKUZDX9lbc06Tn9L6U3QZS13HQ==
+  dependencies:
+    rate-limiter-flexible "2.1.10"
+
 node-abort-controller@^3.0.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/node-abort-controller/-/node-abort-controller-3.1.1.tgz#a94377e964a9a37ac3976d848cb5c765833b8548"
@@ -4181,6 +4198,11 @@ range-parser@~1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/range-parser/-/range-parser-1.2.1.tgz#3cf37023d199e1c24d1a55b84800c2f3e6468031"
   integrity sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==
+
+rate-limiter-flexible@2.1.10:
+  version "2.1.10"
+  resolved "https://registry.yarnpkg.com/rate-limiter-flexible/-/rate-limiter-flexible-2.1.10.tgz#5bf7c841bd8cbddd483a95ab65f765efe652aabf"
+  integrity sha512-Pa+8TPD4xYaiCUB5K4a/+j2FHDUe4HP1g49JmKEmkOkhqPaeVqxJsZuuVaza/svSCOT+V73vtsyBiSFK/e1yXw==
 
 raw-body@2.5.2:
   version "2.5.2"
