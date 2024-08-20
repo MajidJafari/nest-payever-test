@@ -15,4 +15,8 @@ export class UserMongoRepository implements IUserRepository {
   async save(user: IUser): Promise<IUser> {
     return (await this.userModel.create(user)) as IUser;
   }
+
+  async removeAll(): Promise<void> {
+    await this.userModel.deleteMany();
+  }
 }

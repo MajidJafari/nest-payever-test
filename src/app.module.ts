@@ -28,10 +28,10 @@ import { EnvironmentTypes } from './domain/enums/environment-types';
       useFactory: (configService: ConfigService) => {
         const isTestEnv =
           configService.get<EnvironmentTypes>('NODE_ENV') ===
-          EnvironmentTypes.Dev;
+          EnvironmentTypes.Prod;
         return isTestEnv
-          ? new FakeEmailService()
-          : new EmailService(configService);
+          ? new EmailService(configService)
+          : new FakeEmailService();
       },
       inject: [ConfigService],
     },
@@ -40,10 +40,10 @@ import { EnvironmentTypes } from './domain/enums/environment-types';
       useFactory: (configService: ConfigService) => {
         const isTestEnv =
           configService.get<EnvironmentTypes>('NODE_ENV') ===
-          EnvironmentTypes.Dev;
+          EnvironmentTypes.Prod;
         return isTestEnv
-          ? new FakeRabbitMQPService()
-          : new RabbitMQService(configService);
+          ? new RabbitMQService(configService)
+          : new FakeRabbitMQPService();
       },
       inject: [ConfigService],
     },

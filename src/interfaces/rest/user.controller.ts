@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, ConflictException } from '@nestjs/common';
 import { UserCreationService } from '../../application/services/user-creation.service';
 import { CreateUserDto, UserResponseDto } from './dtos/user.dto';
 
@@ -9,19 +9,26 @@ export class UserController {
   @Post('/')
   async createUser(
     @Body() createUserDto: CreateUserDto,
-  ): Promise<{ user: UserResponseDto }> {
+  ): Promise<UserResponseDto> {
     const {
       name: dtoName,
       email: dtoEmail,
       password: dtoPassword,
     } = createUserDto;
 
-    const { id, name, email } = await this.userCreationService.createUser(
-      dtoName,
-      dtoEmail,
-      dtoPassword,
-    );
+    try {
+      const { id, name, email } = await this.userCreationService.createUser(
+        dtoName,
+        dtoEmail,
+        dtoPassword,
+      );
 
-    return { user: { id, name, email } };
+      return { id, name, email };
+    } catch (e) {
+      if (e.code === 11000) {
+        throw new ConflictException('User with the same email exist.');
+      }
+      throw e;
+    }
   }
 }

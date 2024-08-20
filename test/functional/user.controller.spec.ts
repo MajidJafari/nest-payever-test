@@ -4,38 +4,54 @@ import * as request from 'supertest';
 import { UserController } from '../../src/interfaces/rest/user.controller';
 import { UserCreationService } from '../../src/application/services/user-creation.service';
 import { CustomValidationPipe } from '../../src/interfaces/pipes/custom-validation.pipe';
+import { WrapResponseInterceptor } from '../../src/interfaces/interceptors/wrap-response.interceptor';
+import { CustomExceptionFilter } from '../../src/interfaces/filters/custom-exception.filter';
+import { MongooseModule } from '@nestjs/mongoose';
+import { UserMongoRepository } from '../../src/infrastructure/persistence/user.mongo.repository';
+import { SenderFactory } from '../../src/application/services/sender.factory';
+import { FakeEmailService } from '../../src/application/services/fake/fake-email.service';
+import { FakeRabbitMQPService } from '../../src/application/services/fake/fake-rabbitmq.service';
+import { UserSchema } from '../../src/infrastructure/schemas/user.schema';
 
 describe('UserController (e2e)', () => {
   let app: INestApplication;
-  let userCreationServiceMock: Partial<UserCreationService>;
+  let userRepo: UserMongoRepository;
 
-  beforeEach(async () => {
-    userCreationServiceMock = {
-      createUser: jest.fn(),
-    };
-
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [
+        MongooseModule.forRoot('mongodb://localhost:27017/payerver-test-db'),
+        MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
+      ],
       controllers: [UserController],
       providers: [
-        { provide: UserCreationService, useValue: userCreationServiceMock },
+        UserCreationService,
+        { provide: 'EmailService', useClass: FakeEmailService },
+        { provide: 'RabbitMQService', useClass: FakeRabbitMQPService },
+        SenderFactory,
+        { provide: 'UserRepository', useClass: UserMongoRepository },
       ],
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new CustomValidationPipe());
+    app
+      .useGlobalPipes(
+        new CustomValidationPipe({
+          transform: true,
+          whitelist: true,
+          forbidNonWhitelisted: true,
+        }),
+      )
+      .useGlobalInterceptors(new WrapResponseInterceptor())
+      .useGlobalFilters(new CustomExceptionFilter());
     await app.init();
+
+    userRepo = moduleFixture.get<UserMongoRepository>('UserRepository');
   });
 
   describe('createUser /api/users (POST) ', () => {
-    beforeEach(() => {
-      const mockUser = {
-        name: 'John Doe',
-        email: 'john@example.com',
-        password: 'hashedpassword',
-      };
-      userCreationServiceMock.createUser = jest
-        .fn()
-        .mockResolvedValue(mockUser);
+    beforeEach(async () => {
+      await userRepo.removeAll();
     });
     it('should create user and return 201 status', async () => {
       await request(app.getHttpServer())
@@ -48,10 +64,30 @@ describe('UserController (e2e)', () => {
         .expect(201)
         .expect(({ body }: any) => {
           expect(body).not.toHaveProperty('password');
-          expect(body.user.name).toEqual('John Doe');
-          expect(body.user.email).toEqual('john@example.com');
+          expect(body.data.name).toEqual('John Doe');
+          expect(body.data.email).toEqual('john@example.com');
         });
     });
+
+    it('should not create user with the already existed email', async () => {
+      await request(app.getHttpServer())
+        .post('/users')
+        .send({
+          name: 'John Doe',
+          email: 'john@example.com',
+          password: 'password',
+        })
+        .expect(201);
+      await request(app.getHttpServer())
+        .post('/users')
+        .send({
+          name: 'John Doe',
+          email: 'john@example.com',
+          password: 'password',
+        })
+        .expect(409);
+    });
+
     describe('validation', () => {
       it('should not allow user creation if name is not entered', async () => {
         await request(app.getHttpServer())
@@ -104,7 +140,7 @@ describe('UserController (e2e)', () => {
           })
           .expect(201)
           .expect(({ body }: any) => {
-            expect(body.user.name).toEqual('John Doe');
+            expect(body.data.name).toEqual('John Doe');
           });
       });
       it('created user should have its email in trimmed lowercase format', async () => {
@@ -117,13 +153,13 @@ describe('UserController (e2e)', () => {
           })
           .expect(201)
           .expect(({ body }: any) => {
-            expect(body.user.email).toEqual('john@example.com');
+            expect(body.data.email).toEqual('john@example.com');
           });
       });
     });
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await app.close();
   });
 });

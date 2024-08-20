@@ -13,6 +13,7 @@ describe('UserCreationService', () => {
   beforeEach(async () => {
     userRepositoryMock = {
       save: jest.fn(),
+      removeAll: jest.fn(),
     };
 
     const emailSenderMock = { send: jest.fn() };
